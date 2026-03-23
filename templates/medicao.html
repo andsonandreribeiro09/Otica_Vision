@@ -20,8 +20,8 @@ body{
 
 video{
   border-radius:15px;
-  width:420px;
-  height:320px;
+  width:600px;   /* maior campo de captura */
+  height:450px;
   border:3px solid #22c55e;
 }
 
@@ -29,6 +29,8 @@ canvas{
   position:absolute;
   top:0;
   left:0;
+  width:600px;
+  height:450px;
 }
 
 #foto{
@@ -36,7 +38,7 @@ canvas{
   display:none;
   border-radius:10px;
   border:3px solid #22c55e;
-  width:200px;
+  width:250px;
 }
 
 .status{
@@ -77,10 +79,10 @@ button:hover{
 
 <div class="video-container">
   <video id="video" autoplay playsinline></video>
-  <canvas id="overlay" width="420" height="320"></canvas>
+  <canvas id="overlay" width="600" height="450"></canvas>
 </div>
 
-<img id="output" style="display:none; border:3px solid #22c55e; border-radius:10px; width:200px;">
+<img id="output" style="display:none; border:3px solid #22c55e; border-radius:10px; width:250px;">
 <div id="status" class="status">Posicione seu rosto</div>
 
 <div class="info">
@@ -96,7 +98,6 @@ Score: <span id="score">0</span>%
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
 <script>
-
 // ==============================
 let paciente_id = JSON.parse(document.body.dataset.paciente);
 
@@ -115,6 +116,14 @@ let stableFrames = 0;
 
 let FOTO_TIRADA = false;
 let PROCESSANDO = true;
+
+// ==============================
+// função para checar se ponto está dentro da elipse
+function dentroElipse(x, y, cx, cy, w, h){
+  let dx = x - cx;
+  let dy = y - cy;
+  return ((dx*dx)/(w/2*w/2) + (dy*dy)/(h/2*h/2)) <= 1;
+}
 
 // ==============================
 navigator.mediaDevices.getUserMedia({ video:true })
@@ -148,10 +157,10 @@ faceMesh.onResults(results=>{
   // GUIA DO ROSTO (elipse)
   ctx.strokeStyle = "rgba(0,0,255,0.5)";
   ctx.lineWidth = 2;
-  let guia_cx = canvas.width/2;
-  let guia_cy = canvas.height/2;
-  let guia_w = 160;
-  let guia_h = 220;
+  const guia_cx = canvas.width/2;
+  const guia_cy = canvas.height/2;
+  const guia_w = 240;  // proporcional ao tamanho maior
+  const guia_h = 330;
   ctx.beginPath();
   ctx.ellipse(guia_cx, guia_cy, guia_w/2, guia_h/2, 0, 0, 2*Math.PI);
   ctx.stroke();
@@ -170,52 +179,62 @@ faceMesh.onResults(results=>{
   let ly = lm[L].y * canvas.height;
   let ry = lm[R].y * canvas.height;
 
-  // ✅ CORREÇÃO SUAVIZAÇÃO
+  // ✅ SUAVIZAÇÃO
   if(smooth.lx === null){
     smooth = { lx, rx, ly, ry };
   }
-
   smooth.lx = smooth.lx*0.7 + lx*0.3;
   smooth.rx = smooth.rx*0.7 + rx*0.3;
   smooth.ly = smooth.ly*0.7 + ly*0.3;
   smooth.ry = smooth.ry*0.7 + ry*0.3;
 
-  let dist = Math.hypot(smooth.rx - smooth.lx, smooth.ry - smooth.ly);
+  // ==============================
+  // verifica se olhos estão dentro da elipse
+  const dentro = dentroElipse(smooth.lx, smooth.ly, guia_cx, guia_cy, guia_w, guia_h) &&
+                  dentroElipse(smooth.rx, smooth.ry, guia_cx, guia_cy, guia_w, guia_h);
+
+  if(!dentro){
+    statusEl.innerText = "Posicione o rosto dentro do círculo";
+    stableFrames = 0;
+    return; // não processa DP nem captura
+  }
+
+  // ==============================
+  // DISTÂNCIA ENTRE OLHOS
+  const dist = Math.hypot(smooth.rx - smooth.lx, smooth.ry - smooth.ly);
 
   // ==============================
   // ESCALA REAL
-  let faceLeft = lm[234].x * canvas.width;
-  let faceRight = lm[454].x * canvas.width;
-  let faceWidth = Math.abs(faceRight - faceLeft);
-  let escala = 140 / Math.max(faceWidth,1);
+  const faceLeft = lm[234].x * canvas.width;
+  const faceRight = lm[454].x * canvas.width;
+  const faceWidth = Math.abs(faceRight - faceLeft);
+  const escala = 140 / Math.max(faceWidth,1);
 
   // ==============================
   // MEDIDAS
   let dp = dist * escala;
-
   let cx = (smooth.lx + smooth.rx)/2;
   let cy = (smooth.ly + smooth.ry)/2;
 
-  let nx = lm[1].x * canvas.width;
-  let ny = lm[1].y * canvas.height;
+  const nx = lm[1].x * canvas.width;
+  const ny = lm[1].y * canvas.height;
   cy += (ny - cy)*0.2;
 
-  let dnp_e = Math.abs(smooth.lx - cx) * escala;
-  let dnp_d = Math.abs(smooth.rx - cx) * escala;
+  const dnp_e = Math.abs(smooth.lx - cx) * escala;
+  const dnp_d = Math.abs(smooth.rx - cx) * escala;
 
   // ==============================
   // HISTÓRICO + SUAVIZAÇÃO FINAL
   dp_history.push(dp);
   if(dp_history.length > 10) dp_history.shift();
-  let dp_suave = dp_history.reduce((a,b)=>a+b,0) / dp_history.length;
-  dp = dp_suave;
+  dp = dp_history.reduce((a,b)=>a+b,0) / dp_history.length;
 
-  let variacao = Math.max(...dp_history) - Math.min(...dp_history);
+  const variacao = Math.max(...dp_history) - Math.min(...dp_history);
 
   // ==============================
   // SCORE
-  let dp_target = 64;
-  let erro = Math.abs(dp - dp_target);
+  const dp_target = 64;
+  const erro = Math.abs(dp - dp_target);
   let score = 100 - (erro * 2);
   score = Math.max(0, Math.min(100, score));
 
@@ -271,7 +290,7 @@ faceMesh.onResults(results=>{
   // OVERLAY QUADRO CENTRAL (opcional)
   ctx.strokeStyle = score > 90 ? "green" : "red";
   ctx.lineWidth = 2;
-  ctx.strokeRect(50,50,320,220);
+  ctx.strokeRect(90, 60, 420, 330);
 
   // ==============================
   // UI
@@ -285,8 +304,8 @@ faceMesh.onResults(results=>{
 // ==============================
 new Camera(video,{
   onFrame: async ()=> await faceMesh.send({image:video}),
-  width:420,
-  height:320
+  width:600,
+  height:450
 }).start();
 
 // ==============================
