@@ -7,15 +7,29 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python import BaseOptions
 
 # -----------------------------
-# CONFIG MEDIAPIPE
+# 🔥 DETECTOR LAZY LOAD
 # -----------------------------
-options = vision.FaceLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path="face_landmarker.task"),
-    running_mode=vision.RunningMode.VIDEO,
-    num_faces=1
-)
+detector = None
 
-detector = vision.FaceLandmarker.create_from_options(options)
+def get_detector():
+    global detector
+
+    if detector is None:
+        try:
+            options = vision.FaceLandmarkerOptions(
+                base_options=BaseOptions(model_asset_path="face_landmarker.task"),
+                running_mode=vision.RunningMode.VIDEO,
+                num_faces=1
+            )
+
+            detector = vision.FaceLandmarker.create_from_options(options)
+            print("✅ MediaPipe carregado")
+
+        except Exception as e:
+            print("❌ Erro MediaPipe:", e)
+            detector = None
+
+    return detector
 
 # -----------------------------
 # SUAVIZAÇÃO
@@ -45,7 +59,6 @@ def carregar_armacao(nome):
         print("Erro carregando:", caminho)
         return None
 
-    # garante canal alpha
     if img.shape[2] == 4:
         cache_armacoes[nome] = img
         return img
@@ -79,20 +92,21 @@ def calcular_medidas(smooth, escala):
         np.array([smooth["nx"], smooth["ny"]])
     )
 
-    dp_mm = dp_px * escala
-    dnp_e_mm = dnp_e_px * escala
-    dnp_d_mm = dnp_d_px * escala
-
-    return dp_mm, dnp_e_mm, dnp_d_mm
+    return dp_px * escala, dnp_e_px * escala, dnp_d_px * escala
 
 # -----------------------------
 # FUNÇÃO PRINCIPAL
 # -----------------------------
 def processar_frame(frame):
 
+    detector = get_detector()
+
+    # 🔥 se não carregou (Render), retorna frame puro
+    if detector is None:
+        return frame
+
     h, w = frame.shape[:2]
 
-    # timestamp
     frame_id = getattr(processar_frame, "frame_id", 0) + 1
     processar_frame.frame_id = frame_id
     timestamp = frame_id * 33
@@ -104,16 +118,18 @@ def processar_frame(frame):
         data=rgb
     )
 
-    result = detector.detect_for_video(mp_image, timestamp)
+    try:
+        result = detector.detect_for_video(mp_image, timestamp)
+    except Exception as e:
+        print("Erro detect:", e)
+        return frame
 
     if not result.face_landmarks:
         return frame
 
     lm = result.face_landmarks[0]
 
-    # -----------------------------
     # LANDMARKS
-    # -----------------------------
     iris_l = lm[468]
     iris_r = lm[473]
     nose = lm[1]
@@ -127,9 +143,7 @@ def processar_frame(frame):
     xt1 = int(t_l.x * w)
     xt2 = int(t_r.x * w)
 
-    # -----------------------------
-    # SUAVIZAÇÃO
-    # -----------------------------
+    # SMOOTH
     if smooth["lx"] is None:
         smooth["lx"], smooth["ly"] = lx, ly
         smooth["rx"], smooth["ry"] = rx, ry
@@ -140,9 +154,7 @@ def processar_frame(frame):
                  ("nx", nx), ("ny", ny)]:
         smooth[k] = int(SMOOTH * smooth[k] + (1 - SMOOTH) * v)
 
-    # -----------------------------
-    # ESCALA PELA ÍRIS (REAL)
-    # -----------------------------
+    # ESCALA
     iris_points = [468, 469, 470, 471, 472]
     pts = [(lm[i].x * w, lm[i].y * h) for i in iris_points]
 
@@ -152,27 +164,14 @@ def processar_frame(frame):
     if iris_px < 1:
         return frame
 
-    escala_iris = 11.7 / iris_px  # mm reais da íris
-
-    # -----------------------------
-    # ESCALA PELO ROSTO
-    # -----------------------------
+    escala_iris = 11.7 / iris_px
     face_px = max(1, abs(xt2 - xt1))
-    escala_face = 140 / face_px  # mm médio rosto
-
-    # -----------------------------
-    # ESCALA FINAL
-    # -----------------------------
+    escala_face = 140 / face_px
     escala = (escala_iris * 0.7) + (escala_face * 0.3)
 
-    # -----------------------------
-    # MEDIÇÕES
-    # -----------------------------
     dp_mm, dnp_e_mm, dnp_d_mm = calcular_medidas(smooth, escala)
 
-    # -----------------------------
-    # VALIDAÇÃO
-    # -----------------------------
+    # STATUS
     if dp_mm < 50 or dp_mm > 80:
         status = "Ajuste distância"
         cor = (0, 0, 255)
@@ -180,26 +179,15 @@ def processar_frame(frame):
         status = "Medição OK"
         cor = (0, 255, 0)
 
-    # -----------------------------
-    # VISUAL DEBUG
-    # -----------------------------
+    # DEBUG
     cv2.circle(frame, (smooth["lx"], smooth["ly"]), 4, (255, 0, 0), -1)
     cv2.circle(frame, (smooth["rx"], smooth["ry"]), 4, (0, 255, 0), -1)
     cv2.circle(frame, (smooth["nx"], smooth["ny"]), 4, (0, 0, 255), -1)
 
-    # -----------------------------
-    # TEXTO
-    # -----------------------------
     cv2.putText(frame, f"DP: {dp_mm:.1f} mm", (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, cor, 2)
 
-    cv2.putText(frame, f"DNP E: {dnp_e_mm:.1f}", (20, 70),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-
-    cv2.putText(frame, f"DNP D: {dnp_d_mm:.1f}", (20, 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-
-    cv2.putText(frame, status, (20, 130),
+    cv2.putText(frame, status, (20, 80),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, cor, 2)
 
     return frame
