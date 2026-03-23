@@ -16,12 +16,14 @@ body{
   position:relative;
   display:inline-block;
   margin-top:20px;
+  width: 90vw;       /* responsivo */
+  max-width: 600px;   /* limite máximo */
 }
 
 video{
   border-radius:15px;
-  width:600px;   /* maior campo de captura */
-  height:450px;
+  width:100%;         /* ocupa container */
+  height:auto;
   border:3px solid #22c55e;
 }
 
@@ -29,8 +31,8 @@ canvas{
   position:absolute;
   top:0;
   left:0;
-  width:600px;
-  height:450px;
+  width:100%;
+  height:100%;
 }
 
 #foto{
@@ -38,7 +40,8 @@ canvas{
   display:none;
   border-radius:10px;
   border:3px solid #22c55e;
-  width:250px;
+  width:40%;
+  max-width:250px;
 }
 
 .status{
@@ -79,10 +82,10 @@ button:hover{
 
 <div class="video-container">
   <video id="video" autoplay playsinline></video>
-  <canvas id="overlay" width="600" height="450"></canvas>
+  <canvas id="overlay"></canvas>
 </div>
 
-<img id="output" style="display:none; border:3px solid #22c55e; border-radius:10px; width:250px;">
+<img id="output" style="display:none;">
 <div id="status" class="status">Posicione seu rosto</div>
 
 <div class="info">
@@ -113,7 +116,6 @@ const statusEl = document.getElementById("status");
 
 let dp_history = [];
 let stableFrames = 0;
-
 let FOTO_TIRADA = false;
 let PROCESSANDO = true;
 
@@ -140,11 +142,16 @@ faceMesh.setOptions({
   refineLandmarks:true
 });
 
-// índices olhos MediaPipe
 const L = 468;
 const R = 473;
-
 let smooth = { lx:null, rx:null, ly:null, ry:null };
+
+// ==============================
+function atualizarCanvasSize(){
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+}
+video.addEventListener('loadedmetadata', atualizarCanvasSize);
 
 // ==============================
 faceMesh.onResults(results=>{
@@ -159,13 +166,12 @@ faceMesh.onResults(results=>{
   ctx.lineWidth = 2;
   const guia_cx = canvas.width/2;
   const guia_cy = canvas.height/2;
-  const guia_w = 240;  // proporcional ao tamanho maior
-  const guia_h = 330;
+  const guia_w = canvas.width * 0.4;   // proporcional à tela
+  const guia_h = canvas.height * 0.73;
   ctx.beginPath();
   ctx.ellipse(guia_cx, guia_cy, guia_w/2, guia_h/2, 0, 0, 2*Math.PI);
   ctx.stroke();
 
-  // ❌ SEM ROSTO
   if(!results.multiFaceLandmarks.length){
     statusEl.innerText = "Nenhum rosto detectado";
     stableFrames = 0;
@@ -179,7 +185,7 @@ faceMesh.onResults(results=>{
   let ly = lm[L].y * canvas.height;
   let ry = lm[R].y * canvas.height;
 
-  // ✅ SUAVIZAÇÃO
+  // suavização
   if(smooth.lx === null){
     smooth = { lx, rx, ly, ry };
   }
@@ -188,7 +194,6 @@ faceMesh.onResults(results=>{
   smooth.ly = smooth.ly*0.7 + ly*0.3;
   smooth.ry = smooth.ry*0.7 + ry*0.3;
 
-  // ==============================
   // verifica se olhos estão dentro da elipse
   const dentro = dentroElipse(smooth.lx, smooth.ly, guia_cx, guia_cy, guia_w, guia_h) &&
                   dentroElipse(smooth.rx, smooth.ry, guia_cx, guia_cy, guia_w, guia_h);
@@ -196,26 +201,21 @@ faceMesh.onResults(results=>{
   if(!dentro){
     statusEl.innerText = "Posicione o rosto dentro do círculo";
     stableFrames = 0;
-    return; // não processa DP nem captura
+    return;
   }
 
-  // ==============================
-  // DISTÂNCIA ENTRE OLHOS
+  // distância entre olhos
   const dist = Math.hypot(smooth.rx - smooth.lx, smooth.ry - smooth.ly);
 
-  // ==============================
-  // ESCALA REAL
+  // escala real
   const faceLeft = lm[234].x * canvas.width;
   const faceRight = lm[454].x * canvas.width;
   const faceWidth = Math.abs(faceRight - faceLeft);
   const escala = 140 / Math.max(faceWidth,1);
 
-  // ==============================
-  // MEDIDAS
   let dp = dist * escala;
   let cx = (smooth.lx + smooth.rx)/2;
   let cy = (smooth.ly + smooth.ry)/2;
-
   const nx = lm[1].x * canvas.width;
   const ny = lm[1].y * canvas.height;
   cy += (ny - cy)*0.2;
@@ -223,23 +223,19 @@ faceMesh.onResults(results=>{
   const dnp_e = Math.abs(smooth.lx - cx) * escala;
   const dnp_d = Math.abs(smooth.rx - cx) * escala;
 
-  // ==============================
-  // HISTÓRICO + SUAVIZAÇÃO FINAL
+  // histórico dp
   dp_history.push(dp);
   if(dp_history.length > 10) dp_history.shift();
   dp = dp_history.reduce((a,b)=>a+b,0) / dp_history.length;
 
   const variacao = Math.max(...dp_history) - Math.min(...dp_history);
 
-  // ==============================
-  // SCORE
+  // score
   const dp_target = 64;
-  const erro = Math.abs(dp - dp_target);
-  let score = 100 - (erro * 2);
+  let score = 100 - Math.abs(dp - dp_target)*2;
   score = Math.max(0, Math.min(100, score));
 
-  // ==============================
-  // STATUS INTELIGENTE
+  // status inteligente
   let status = "";
   if(dp < 55) status = "Aproxime o rosto";
   else if(dp > 75) status = "Afaste o rosto";
@@ -247,9 +243,8 @@ faceMesh.onResults(results=>{
   else if(score < 90) status = "Quase lá...";
   else status = "Perfeito! Não se mova";
 
-  // ==============================
-  // AUTO CAPTURA COM CONTAGEM
-  if(score > 90 && variacao < 2){
+  // captura automática quando score >= 98
+  if(score >= 98 && variacao < 2){
     stableFrames++;
     status = "Capturando... " + stableFrames;
   } else {
@@ -264,20 +259,11 @@ faceMesh.onResults(results=>{
 
   statusEl.innerText = status;
 
-  // ==============================
-  // OVERLAY DO ROSTO
+  // overlay dos olhos
   ctx.fillStyle = "green";
-  ctx.beginPath();
-  ctx.arc(smooth.lx, smooth.ly, 4, 0, 2*Math.PI);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(smooth.rx, smooth.ry, 4, 0, 2*Math.PI);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(nx, ny, 4, 0, 2*Math.PI);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(smooth.lx, smooth.ly, 4,0,2*Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(smooth.rx, smooth.ry, 4,0,2*Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(nx, ny, 4,0,2*Math.PI); ctx.fill();
 
   // linha entre olhos
   ctx.strokeStyle = "red";
@@ -287,12 +273,11 @@ faceMesh.onResults(results=>{
   ctx.lineTo(smooth.rx, smooth.ry);
   ctx.stroke();
 
-  // OVERLAY QUADRO CENTRAL (opcional)
-  ctx.strokeStyle = score > 90 ? "green" : "red";
+  // overlay quadro central
+  ctx.strokeStyle = score > 98 ? "green" : "red";
   ctx.lineWidth = 2;
-  ctx.strokeRect(90, 60, 420, 330);
+  ctx.strokeRect(canvas.width*0.15, canvas.height*0.13, canvas.width*0.7, canvas.height*0.73);
 
-  // ==============================
   // UI
   dpEl.innerText = dp.toFixed(1);
   dnp_eEl.innerText = dnp_e.toFixed(1);
@@ -309,7 +294,6 @@ new Camera(video,{
 }).start();
 
 // ==============================
-// 📸 CAPTURA FOTO
 function capturarFoto(){
   let tempCanvas = document.createElement("canvas");
   tempCanvas.width = video.videoWidth;
@@ -336,7 +320,6 @@ function capturarFoto(){
   });
 }
 
-// ==============================
 function finalizar(){
   if(!FOTO_TIRADA){
     alert("Aguarde a captura da foto!");
@@ -355,7 +338,7 @@ function finalizar(){
   })
   .then(()=> window.location.href="/prontuario/"+paciente_id);
 }
-
 </script>
+
 </body>
 </html>
