@@ -80,8 +80,7 @@ button:hover{
   <canvas id="overlay" width="420" height="320"></canvas>
 </div>
 
-<img id="foto"/>
-
+<img id="output" style="display:none; border:3px solid #22c55e; border-radius:10px; width:200px;">
 <div id="status" class="status">Posicione seu rosto</div>
 
 <div class="info">
@@ -132,6 +131,7 @@ faceMesh.setOptions({
   refineLandmarks:true
 });
 
+// índices olhos MediaPipe
 const L = 468;
 const R = 473;
 
@@ -143,6 +143,18 @@ faceMesh.onResults(results=>{
   if(!PROCESSANDO) return;
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // ==============================
+  // GUIA DO ROSTO (elipse)
+  ctx.strokeStyle = "rgba(0,0,255,0.5)";
+  ctx.lineWidth = 2;
+  let guia_cx = canvas.width/2;
+  let guia_cy = canvas.height/2;
+  let guia_w = 160;
+  let guia_h = 220;
+  ctx.beginPath();
+  ctx.ellipse(guia_cx, guia_cy, guia_w/2, guia_h/2, 0, 0, 2*Math.PI);
+  ctx.stroke();
 
   // ❌ SEM ROSTO
   if(!results.multiFaceLandmarks.length){
@@ -168,16 +180,12 @@ faceMesh.onResults(results=>{
   smooth.ly = smooth.ly*0.7 + ly*0.3;
   smooth.ry = smooth.ry*0.7 + ry*0.3;
 
-  let dist = Math.hypot(
-    smooth.rx - smooth.lx,
-    smooth.ry - smooth.ly
-  );
+  let dist = Math.hypot(smooth.rx - smooth.lx, smooth.ry - smooth.ly);
 
   // ==============================
   // ESCALA REAL
   let faceLeft = lm[234].x * canvas.width;
   let faceRight = lm[454].x * canvas.width;
-
   let faceWidth = Math.abs(faceRight - faceLeft);
   let escala = 140 / Math.max(faceWidth,1);
 
@@ -190,7 +198,6 @@ faceMesh.onResults(results=>{
 
   let nx = lm[1].x * canvas.width;
   let ny = lm[1].y * canvas.height;
-
   cy += (ny - cy)*0.2;
 
   let dnp_e = Math.abs(smooth.lx - cx) * escala;
@@ -200,7 +207,6 @@ faceMesh.onResults(results=>{
   // HISTÓRICO + SUAVIZAÇÃO FINAL
   dp_history.push(dp);
   if(dp_history.length > 10) dp_history.shift();
-
   let dp_suave = dp_history.reduce((a,b)=>a+b,0) / dp_history.length;
   dp = dp_suave;
 
@@ -210,14 +216,12 @@ faceMesh.onResults(results=>{
   // SCORE
   let dp_target = 64;
   let erro = Math.abs(dp - dp_target);
-
   let score = 100 - (erro * 2);
   score = Math.max(0, Math.min(100, score));
 
   // ==============================
   // STATUS INTELIGENTE
   let status = "";
-
   if(dp < 55) status = "Aproxime o rosto";
   else if(dp > 75) status = "Afaste o rosto";
   else if(score < 70) status = "Centralize melhor";
@@ -242,7 +246,29 @@ faceMesh.onResults(results=>{
   statusEl.innerText = status;
 
   // ==============================
-  // OVERLAY VISUAL
+  // OVERLAY DO ROSTO
+  ctx.fillStyle = "green";
+  ctx.beginPath();
+  ctx.arc(smooth.lx, smooth.ly, 4, 0, 2*Math.PI);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(smooth.rx, smooth.ry, 4, 0, 2*Math.PI);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(nx, ny, 4, 0, 2*Math.PI);
+  ctx.fill();
+
+  // linha entre olhos
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(smooth.lx, smooth.ly);
+  ctx.lineTo(smooth.rx, smooth.ry);
+  ctx.stroke();
+
+  // OVERLAY QUADRO CENTRAL (opcional)
   ctx.strokeStyle = score > 90 ? "green" : "red";
   ctx.lineWidth = 2;
   ctx.strokeRect(50,50,320,220);
@@ -266,41 +292,37 @@ new Camera(video,{
 // ==============================
 // 📸 CAPTURA FOTO
 function capturarFoto(){
-
   let tempCanvas = document.createElement("canvas");
   tempCanvas.width = video.videoWidth;
   tempCanvas.height = video.videoHeight;
-
   let tctx = tempCanvas.getContext("2d");
   tctx.drawImage(video,0,0);
-
   let img = tempCanvas.toDataURL("image/jpeg");
 
   let foto = document.getElementById("foto");
   foto.src = img;
   foto.style.display = "block";
-
   statusEl.innerText = "Foto capturada ✅";
 
   fetch("/salvar_foto",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      paciente_id,
-      imagem: img
-    })
+    body:JSON.stringify({ paciente_id, imagem: img })
+  })
+  .then(res => res.json())
+  .then(json => {
+      const output = document.getElementById("output");
+      output.src = "data:image/jpeg;base64," + json.image;
+      output.style.display = "block";
   });
-
 }
 
 // ==============================
 function finalizar(){
-
   if(!FOTO_TIRADA){
     alert("Aguarde a captura da foto!");
     return;
   }
-
   fetch("/salvar_medicao",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -313,10 +335,8 @@ function finalizar(){
     })
   })
   .then(()=> window.location.href="/prontuario/"+paciente_id);
-
 }
 
 </script>
-
 </body>
 </html>
