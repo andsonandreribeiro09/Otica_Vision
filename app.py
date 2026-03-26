@@ -560,7 +560,10 @@ def salvar_foto():
     conn.commit()
     conn.close()
 
-    return {"status": "ok"}
+    return {
+    "status": "ok",
+    "image": base64.b64encode(img_data).decode("utf-8")
+}
 
 
 @app.route("/process-frame", methods=["POST"])
