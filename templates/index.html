@@ -8,7 +8,7 @@
 <title>VisionAI Ótica</title>
 
 <!-- Ícone da aba -->
-<link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='icon.jpeg') }}">
+<link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/icon.jpeg') }}">
 
 <style>
 html, body {
@@ -17,16 +17,16 @@ html, body {
   height: 100%;
   font-family: 'Segoe UI', sans-serif;
 
-  /* Fundo de tela inteira */
-  background: url("{{ url_for('static', filename='fundo.png') }}") no-repeat center center fixed;
+  /* Fundo responsivo */
+  background: url("{{ url_for('static', filename='img/fundo.png') }}") no-repeat center center;
   background-size: cover;
 }
 
 /* Ícone flutuante */
 .float-icon {
   position: fixed;
-  bottom: 50px;
-  right: 50px;
+  bottom: 5vh;
+  right: 5vw;
   width: 120px;
   height: 120px;
   cursor: pointer;
@@ -34,7 +34,7 @@ html, body {
   z-index: 1000;
 }
 
-/* Ícone redondo */
+/* Imagem do ícone */
 .float-icon img {
   width: 100%;
   height: 100%;
@@ -50,8 +50,8 @@ html, body {
 /* Texto */
 .float-text {
   position: fixed;
-  bottom: 180px;
-  right: 55px;
+  bottom: 22vh;
+  right: 5vw;
   font-size: 22px;
   font-weight: 600;
   color: rgb(57, 6, 179);
@@ -73,64 +73,56 @@ html, body {
   50% { opacity: 1; }
 }
 
-/* ---------------- RESPONSIVIDADE ---------------- */
-
-/* TABLET */
-@media (max-width: 1024px) {
+/* 📱 MOBILE (até 768px) */
+@media (max-width: 768px) {
   .float-icon {
-    width: 90px;
-    height: 90px;
-    bottom: 40px;
-    right: 40px;
+    width: 80px;
+    height: 80px;
+    bottom: 4vh;
+    right: 4vw;
   }
 
   .float-text {
-    font-size: 18px;
-    bottom: 140px;
-    right: 45px;
+    font-size: 16px;
+    bottom: 18vh;
+    right: 4vw;
   }
 }
 
-/* CELULAR */
-@media (max-width: 600px) {
+/* 📱 SMALL MOBILE (até 480px) */
+@media (max-width: 480px) {
   .float-icon {
-    width: 70px;
-    height: 70px;
-    bottom: 20px;
-    right: 20px;
+    width: 65px;
+    height: 65px;
   }
 
   .float-text {
     font-size: 14px;
-    bottom: 100px;
-    right: 25px;
   }
 }
 
-/* CELULAR PEQUENO */
-@media (max-width: 400px) {
+/* 💻 TABLET (768px a 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
   .float-icon {
-    width: 60px;
-    height: 60px;
+    width: 100px;
+    height: 100px;
   }
 
   .float-text {
-    font-size: 12px;
-    bottom: 85px;
+    font-size: 18px;
   }
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- Texto -->
+<!-- Texto de boas-vindas piscando -->
 <div class="float-text">Bem Vindo!</div>
 
-<!-- Ícone -->
+<!-- Ícone flutuante -->
 <a href="/paciente" class="float-icon">
-  <img src="{{ url_for('static', filename='icon.jpeg') }}" alt="Ícone">
+  <img src="{{ url_for('static', filename='img/icon.jpeg') }}" alt="Ícone">
 </a>
 
 </body>
