@@ -7,205 +7,199 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='visionai.css') }}">
     
     <style>
-        /* ------------------ VARIÁVEIS DE TEMA ------------------ */
-        :root {
-            --bg-paper: #f4f1ea;
-            --bg-paper-texture: #ebe8df;
-            --logo-blue: #00acc1;
-            --logo-green: #1b5e20;
-            --text-main: #212121;
-            --text-sub: #616161;
-            --card-bg: #ffffff;
-            --border-light: rgba(0, 0, 0, 0.05);
-            --transition: 0.3s ease;
-        }
+/* ------------------ VARIÁVEIS ------------------ */
+:root {
+    --bg-paper: #f4f1ea;
+    --bg-paper-texture: #ebe8df;
+    --logo-blue: #00acc1;
+    --logo-green: #1b5e20;
+    --text-main: #212121;
+    --text-sub: #616161;
+    --card-bg: #ffffff;
+    --border-light: rgba(0, 0, 0, 0.05);
+    --transition: 0.3s ease;
+}
 
-        /* ------------------ RESET ------------------ */
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-        }
+/* ------------------ RESET GLOBAL ------------------ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        /* ------------------ BODY E FUNDO ------------------ */
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: var(--text-main);
-            min-height: 100vh;
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 🔥 remove TODAS barras */
+}
 
-            /* Fundo PNG cobrindo tudo */
-            background-color: var(--bg-paper);
-            background-image: url("{{ url_for('static', filename='image_16.png') }}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
+/* ------------------ BODY ------------------ */
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
 
-        /* ------------------ HEADER ------------------ */
-        
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-        .logo {
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--logo-blue);
-        }
+    /* Fundo */
+    background-color: var(--bg-paper);
+    background-image: url("{{ url_for('static', filename='image_16.png') }}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
-        nav {
-            display: flex;
-            gap: 5px;
-        }
+/* ------------------ HEADER (opcional) ------------------ */
+header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
 
-        nav a {
-            text-decoration: none;
-            color: var(--text-main);
-            font-weight: 600;
-            padding: 10px 18px;
-            border-radius: 12px;
-            transition: var(--transition);
-            border: 1px solid transparent;
-        }
+.logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--logo-blue);
+}
 
-        nav a:hover {
-            background: rgba(0, 172, 193, 0.05);
-            color: var(--logo-blue);
-            border-color: rgba(0, 172, 193, 0.2);
-        }
+nav {
+    display: flex;
+    gap: 5px;
+}
 
-        /* ------------------ MAIN ------------------ */
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            padding: 140px 20px 50px 20px; /* Ajustado para header fixo */
-            box-sizing: border-box;
-        }
+nav a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 12px;
+    transition: var(--transition);
+}
 
-        h2 {
-            margin: 0 0 10px 0;
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--logo-blue);
-        }
+nav a:hover {
+    background: rgba(0, 172, 193, 0.08);
+    color: var(--logo-blue);
+}
 
-        h3 {
-            margin: 0 0 20px 0;
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--text-main);
-        }
+/* ------------------ MAIN ------------------ */
+main {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px;
 
-        h3 b {
-            color: var(--logo-blue);
-        }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        /* ------------------ VIDEO CONTAINER ------------------ */
-        .video-container {
-            position: relative;
-            width: 90vw;
-            max-width: 600px;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-top: 30px;
-        }
+/* ------------------ TEXTOS ------------------ */
+h3 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    text-align: center;
+}
 
-        .video-container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-            border: 4px solid;
-            border-image: linear-gradient(135deg, var(--logo-blue), var(--logo-green)) 1;
-            filter: drop-shadow(0 0 10px rgba(0,172,193,0.3));
-            pointer-events: none;
-        }
+h3 b {
+    color: var(--logo-blue);
+}
 
-        video {
-            display: block;
-            width: 100%;
-            height: auto;
-            border-radius: 16px;
-        }
+/* ------------------ VIDEO ------------------ */
+.video-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
 
-        canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-        }
+.video-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 3px solid;
+    border-image: linear-gradient(135deg, var(--logo-blue), var(--logo-green)) 1;
+    pointer-events: none;
+}
 
-        /* ------------------ OUTPUT ------------------ */
-        #foto, #output {
-            margin-top: 20px;
-            display: none;
-            border-radius: 16px;
-            border: 2px solid var(--border-light);
-            width: 50%;
-            max-width: 250px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
+video {
+    width: 100%;
+    display: block;
+}
 
-        .status {
-            font-size: 18px;
-            margin-top: 15px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
+canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
 
-        .info {
-            margin-top: 15px;
-            font-size: 18px;
-            color: var(--text-main);
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 50px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-        }
+/* ------------------ OUTPUT ------------------ */
+#foto, #output {
+    margin-top: 15px;
+    display: none;
+    border-radius: 16px;
+    width: 60%;
+    max-width: 250px;
+}
 
-        .info span b {
-            color: var(--logo-blue);
-        }
+/* ------------------ STATUS ------------------ */
+.status {
+    margin-top: 12px;
+    font-weight: 700;
+    text-align: center;
+}
 
-        /* ------------------ BUTTON ------------------ */
-        button {
-            margin-top: 40px;
-            width: 100%;
-            max-width: 300px;
-            padding: 18px;
-            border: none;
-            border-radius: 50px;
-            background: linear-gradient(135deg, var(--logo-blue), #1976d2);
-            color: white;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s ease-out;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(25,118,210,0.2);
-        }
+/* ------------------ INFO ------------------ */
+.info {
+    margin-top: 15px;
+    font-size: 14px;
+    background: var(--card-bg);
+    padding: 12px 18px;
+    border-radius: 30px;
+}
 
-        button:hover {
-            box-shadow: 0 6px 20px rgba(25,118,210,0.3);
-            transform: translateY(-2px);
-        }
+.info span b {
+    color: var(--logo-blue);
+}
 
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 10px rgba(25,118,210,0.2);
-        }
-    </style>
+/* ------------------ BOTÃO ------------------ */
+button {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 280px;
+    padding: 15px;
+    border: none;
+    border-radius: 40px;
+    background: linear-gradient(135deg, var(--logo-blue), #1976d2);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ------------------ RESPONSIVO ------------------ */
+@media (max-width: 600px) {
+    main {
+        max-width: 95%;
+    }
+
+    h3 {
+        font-size: 16px;
+    }
+
+    .info {
+        font-size: 12px;
+    }
+}
+</style>
 </head>
 
 <body data-paciente='{{ paciente_id | tojson }}'>
     <header>
-        <div class="logo">VisionAI</div>
+        
         <nav>
             <a href="/pacientes">Pacientes</a>
         </nav>
