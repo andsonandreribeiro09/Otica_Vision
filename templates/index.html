@@ -7,34 +7,60 @@
 
 <title>VisionAI Ótica</title>
 
-<!-- Ícone da aba -->
+<!-- Ícone -->
 <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='icon.jpeg') }}">
 
 <style>
-html, body {
+
+/* RESET */
+* {
   margin: 0;
   padding: 0;
-  height: 100%;
-  font-family: 'Segoe UI', sans-serif;
-
-  /* Fundo responsivo */
-  background: url("{{ url_for('static', filename='fundo.png') }}") no-repeat center center;
-  background-size: cover;
+  box-sizing: border-box;
 }
 
-/* Ícone flutuante */
+/* 🔥 FUNDO CORRETO (resolve mobile) */
+.bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: url("{{ url_for('static', filename='fundo.png') }}") center center no-repeat;
+  background-size: cover;
+
+  z-index: -1;
+}
+
+/* BODY */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+/* 🔥 CORREÇÃO iOS SAFARI */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* ÍCONE FLUTUANTE */
 .float-icon {
   position: fixed;
-  bottom: 5vh;
+  bottom: calc(5vh + env(safe-area-inset-bottom));
   right: 5vw;
+
   width: 120px;
   height: 120px;
+
   cursor: pointer;
   animation: pulse 1.5s infinite;
   z-index: 1000;
 }
 
-/* Imagem do ícone */
+/* IMAGEM */
 .float-icon img {
   width: 100%;
   height: 100%;
@@ -47,21 +73,24 @@ html, body {
   transform: scale(1.15);
 }
 
-/* Texto */
+/* TEXTO */
 .float-text {
   position: fixed;
   bottom: 22vh;
   right: 5vw;
+
   font-size: 22px;
   font-weight: 600;
   color: rgb(57, 6, 179);
+
   text-shadow: 0 0 10px rgba(0,0,0,0.7);
   opacity: 0;
   animation: fadeInOut 2s infinite;
+
   pointer-events: none;
 }
 
-/* Animações */
+/* ANIMAÇÕES */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.15); }
@@ -73,12 +102,12 @@ html, body {
   50% { opacity: 1; }
 }
 
-/* 📱 MOBILE (até 768px) */
+/* 📱 MOBILE */
 @media (max-width: 768px) {
   .float-icon {
     width: 80px;
     height: 80px;
-    bottom: 4vh;
+    bottom: calc(4vh + env(safe-area-inset-bottom));
     right: 4vw;
   }
 
@@ -89,7 +118,7 @@ html, body {
   }
 }
 
-/* 📱 SMALL MOBILE (até 480px) */
+/* 📱 SMALL MOBILE */
 @media (max-width: 480px) {
   .float-icon {
     width: 65px;
@@ -101,7 +130,7 @@ html, body {
   }
 }
 
-/* 💻 TABLET (768px a 1024px) */
+/* 💻 TABLET */
 @media (min-width: 769px) and (max-width: 1024px) {
   .float-icon {
     width: 100px;
@@ -112,15 +141,19 @@ html, body {
     font-size: 18px;
   }
 }
+
 </style>
 </head>
 
 <body>
 
-<!-- Texto de boas-vindas piscando -->
+<!-- 🔥 FUNDO -->
+<div class="bg"></div>
+
+<!-- TEXTO -->
 <div class="float-text">Bem Vindo!</div>
 
-<!-- Ícone flutuante -->
+<!-- ÍCONE -->
 <a href="/paciente" class="float-icon">
   <img src="{{ url_for('static', filename='icon.jpeg') }}" alt="Ícone">
 </a>
