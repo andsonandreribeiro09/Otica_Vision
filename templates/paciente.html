@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VisionAI • Cadastro do Paciente</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='visionai.css') }}">
-    
+
     <style>
     :root {
         --bg-paper: #f4f1ea;
@@ -18,23 +19,20 @@
         --transition: 0.3s ease;
     }
 
-    /* RESET TOTAL */
     * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
     }
 
-    /* REMOVE SCROLL E TRAVA TELA */
     html, body {
         width: 100%;
         height: 100%;
-        overflow: hidden; /* 🔥 remove barra */
+        overflow: hidden;
     }
 
-    /* BODY */
     body {
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        font-family: 'Segoe UI', system-ui, sans-serif;
         background-color: var(--bg-paper);
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Cpath fill='%23ebe8df' fill-opacity='0.4' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'/%3E%3C/svg%3E");
         color: var(--text-main);
@@ -44,7 +42,7 @@
         height: 100vh;
     }
 
-    /* HEADER FIXO */
+    /* HEADER */
     header {
         flex-shrink: 0;
         display: flex;
@@ -56,7 +54,8 @@
         border-bottom: 1px solid rgba(0,0,0,0.05);
     }
 
-    .logo {
+    .logo a {
+        text-decoration: none;
         font-size: 20px;
         font-weight: 800;
         color: var(--logo-blue);
@@ -74,6 +73,11 @@
         padding: 8px 12px;
         border-radius: 10px;
         font-size: 14px;
+        transition: var(--transition);
+    }
+
+    nav a:hover {
+        background: rgba(0,0,0,0.05);
     }
 
     nav a.active {
@@ -81,59 +85,23 @@
         color: white;
     }
 
-    /* MAIN FIXO (SEM SCROLL) */
+    /* MAIN */
     main {
         flex: 1;
         display: flex;
-        flex-direction: column;
         justify-content: center;
         align-items: center;
-
         padding: 15px;
-        gap: 15px;
-
-        overflow: hidden; /* 🔥 impede scroll interno */
     }
 
-    /* DASHBOARD RESPONSIVO */
-    .dashboard {
-        display: flex;
-        gap: 10px;
-        width: 100%;
-        max-width: 500px;
-        justify-content: space-between;
-    }
-
-    .card {
-        flex: 1;
-        padding: 15px;
-        border-radius: 16px;
-        background: var(--card-bg);
-        text-align: center;
-    }
-
-    .card h3 {
-        font-size: 20px;
-        font-weight: 800;
-        color: var(--logo-blue);
-    }
-
-    .card p {
-        font-size: 10px;
-        color: var(--text-sub);
-    }
-
-    /* FORMULÁRIO */
+    /* FORM CONTAINER */
     .container {
         width: 100%;
         max-width: 420px;
         background: var(--card-bg);
         padding: 20px;
         border-radius: 20px;
-
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     }
 
     h2 {
@@ -142,7 +110,6 @@
         margin-bottom: 15px;
     }
 
-    /* FORM */
     form {
         display: flex;
         flex-direction: column;
@@ -166,9 +133,13 @@
         border: 1px solid rgba(0,0,0,0.1);
         font-size: 14px;
         background: var(--frosty-bg);
+        outline: none;
     }
 
-    /* BOTÃO */
+    input:focus {
+        border-color: var(--logo-blue);
+    }
+
     button {
         margin-top: 10px;
         padding: 14px;
@@ -178,19 +149,15 @@
         color: white;
         font-weight: bold;
         font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
     }
 
-    /* TABLET */
+    button:hover {
+        transform: scale(1.03);
+    }
+
     @media (min-width: 768px) {
-        .dashboard {
-            max-width: 600px;
-            gap: 20px;
-        }
-
-        .card h3 {
-            font-size: 26px;
-        }
-
         .container {
             max-width: 480px;
             padding: 30px;
@@ -201,34 +168,28 @@
 
 <body>
 
+    <!-- HEADER -->
     <header>
-        <div class="logo">VisionAI</div>
+        <div class="logo">
+            <a href="{{ url_for('index') }}">VisionAI</a>
+        </div>
+
         <nav>
-            <a href="/paciente" class="active">Cadastro</a>
-            <a href="/pacientes">Pacientes</a>
+            <a href="{{ url_for('index') }}" 
+               class="{% if request.path == '/' %}active{% endif %}">
+               Início
+            </a>
+
+            
         </nav>
     </header>
 
+    <!-- MAIN -->
     <main>
-        <div class="dashboard">
-            <div class="card">
-                <h3>{{ total_pacientes }}</h3>
-                <p>Pacientes</p>
-            </div>
-            <div class="card">
-                <h3>{{ total_receitas }}</h3>
-                <p>Receitas</p>
-            </div>
-            <div class="card">
-                <h3>{{ total_armacoes }}</h3>
-                <p>Armações</p>
-            </div>
-        </div>
-
         <div class="container">
             <h2>Cadastro do Paciente</h2>
 
-            <form action="/salvar_paciente" method="POST">
+            <form action="{{ url_for('salvar_paciente') }}" method="POST">
                 
                 <div class="input-group">
                     <label>Nome Completo</label>
