@@ -19,7 +19,7 @@ app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
 # CONFIG INICIAL
 # -----------------------------
 
-carregar_armacao("armacao1.png")
+carregar_armacao("Police - VPL599 - Front.png")
 
 # -----------------------------
 # HELPERS
@@ -67,49 +67,66 @@ def dashboard():
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) as total FROM pacientes")
-    total_pacientes = cursor.fetchone()["total"]
+    paciente_id = request.args.get("paciente_id")
 
-    cursor.execute("SELECT COUNT(*) as total FROM receitas")
-    total_receitas = cursor.fetchone()["total"]
-
-    cursor.execute("SELECT COUNT(*) as total FROM armacoes")
-    total_armacoes = cursor.fetchone()["total"]
-
-    conn.close()
-
-    return render_template("dashboard.html",
-                           total_pacientes=total_pacientes,
-                           total_receitas=total_receitas,
-                           total_armacoes=total_armacoes)
-
-
-@app.route('/dashboard/<int:paciente_id>')
-def dashboard_paciente(paciente_id):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM pacientes WHERE id=?", (paciente_id,))
-    paciente = cursor.fetchone()
-
-    cursor.execute("""
-        SELECT * FROM pedidos
-        WHERE paciente_id=?
-        ORDER BY id DESC LIMIT 1
-    """, (paciente_id,))
-    pedido = cursor.fetchone()
-
+    paciente = None
+    medicoes = []
+    medicao = None
+    receitas = []
     armacao = None
-    if pedido:
-        cursor.execute("SELECT * FROM armacoes WHERE id=?", (pedido["armacao"],))
+
+    # lista lateral
+    cursor.execute("SELECT id, nome FROM pacientes ORDER BY nome")
+    pacientes = cursor.fetchall()
+
+    if paciente_id:
+        # PACIENTE
+        cursor.execute("SELECT * FROM pacientes WHERE id=?", (paciente_id,))
+        paciente = cursor.fetchone()
+
+        # HISTÓRICO DE MEDIÇÕES
+        cursor.execute("""
+            SELECT dp, dnp_e, dnp_d, score, data
+            FROM medicoes
+            WHERE paciente_id=?
+            ORDER BY id DESC
+            LIMIT 5
+        """, (paciente_id,))
+        medicoes = cursor.fetchall()
+
+        # ÚLTIMA MEDIÇÃO
+        if medicoes:
+            medicao = medicoes[0]
+
+        # RECEITAS
+        cursor.execute("""
+            SELECT * FROM receitas
+            WHERE paciente_id=?
+            ORDER BY id DESC
+        """, (paciente_id,))
+        receitas = cursor.fetchall()
+
+        # ARMAÇÃO
+        cursor.execute("""
+            SELECT a.*
+            FROM pedidos p
+            JOIN armacoes a ON p.armacao = a.id
+            WHERE p.paciente_id=?
+            ORDER BY p.id DESC LIMIT 1
+        """, (paciente_id,))
         armacao = cursor.fetchone()
 
     conn.close()
 
     return render_template("dashboard.html",
-                           paciente=paciente,
-                           pedido=pedido,
-                           armacao=armacao)
+        paciente=paciente,
+        medicoes=medicoes,
+        medicao=medicao,
+        receitas=receitas,
+        armacao=armacao,
+        pacientes=pacientes
+    )
+
 
 
 @app.route("/prontuario/<int:id>")
