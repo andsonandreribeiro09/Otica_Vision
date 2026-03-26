@@ -1,344 +1,427 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>VisionAI • Medição Inteligente</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionAI • Medição Inteligente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visionai.css') }}">
+    
+    <style>
+        /* ------------------ VARIÁVEIS DE TEMA ------------------ */
+        :root {
+            --bg-paper: #f4f1ea;
+            --bg-paper-texture: #ebe8df;
+            --logo-blue: #00acc1;
+            --logo-green: #1b5e20;
+            --text-main: #212121;
+            --text-sub: #616161;
+            --card-bg: #ffffff;
+            --border-light: rgba(0, 0, 0, 0.05);
+            --transition: 0.3s ease;
+        }
 
-<style>
-body{
-  margin:0;
-  font-family:Segoe UI;
-  background:radial-gradient(circle at top,#f7f8fa,#f1f2f5);
-  text-align:center;
-}
+        /* ------------------ RESET ------------------ */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
 
-.video-container{
-  position:relative;
-  display:inline-block;
-  margin-top:20px;
-  width: 90vw;       /* responsivo */
-  max-width: 600px;   /* limite máximo */
-}
+        /* ------------------ BODY E FUNDO ------------------ */
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
 
-video{
-  border-radius:15px;
-  width:100%;         /* ocupa container */
-  height:auto;
-  border:3px solid #22c55e;
-}
+            /* Fundo PNG cobrindo tudo */
+            background-color: var(--bg-paper);
+            background-image: url("{{ url_for('static', filename='image_16.png') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
 
-canvas{
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-}
+        /* ------------------ HEADER ------------------ */
+        
 
-#foto{
-  margin-top:15px;
-  display:none;
-  border-radius:10px;
-  border:3px solid #22c55e;
-  width:40%;
-  max-width:250px;
-}
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--logo-blue);
+        }
 
-.status{
-  font-size:18px;
-  margin-top:10px;
-  font-weight:bold;
-}
+        nav {
+            display: flex;
+            gap: 5px;
+        }
 
-.info{
-  margin-top:10px;
-  font-size:18px;
-}
+        nav a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 12px;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
 
-button{
-  margin:20px;
-  padding:12px 30px;
-  border:none;
-  border-radius:10px;
-  background:#22c55e;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
-}
+        nav a:hover {
+            background: rgba(0, 172, 193, 0.05);
+            color: var(--logo-blue);
+            border-color: rgba(0, 172, 193, 0.2);
+        }
 
-button:hover{
-  background:#16a34a;
-}
-</style>
+        /* ------------------ MAIN ------------------ */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 140px 20px 50px 20px; /* Ajustado para header fixo */
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--logo-blue);
+        }
+
+        h3 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        h3 b {
+            color: var(--logo-blue);
+        }
+
+        /* ------------------ VIDEO CONTAINER ------------------ */
+        .video-container {
+            position: relative;
+            width: 90vw;
+            max-width: 600px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-top: 30px;
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            border: 4px solid;
+            border-image: linear-gradient(135deg, var(--logo-blue), var(--logo-green)) 1;
+            filter: drop-shadow(0 0 10px rgba(0,172,193,0.3));
+            pointer-events: none;
+        }
+
+        video {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        /* ------------------ OUTPUT ------------------ */
+        #foto, #output {
+            margin-top: 20px;
+            display: none;
+            border-radius: 16px;
+            border: 2px solid var(--border-light);
+            width: 50%;
+            max-width: 250px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .status {
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .info {
+            margin-top: 15px;
+            font-size: 18px;
+            color: var(--text-main);
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        .info span b {
+            color: var(--logo-blue);
+        }
+
+        /* ------------------ BUTTON ------------------ */
+        button {
+            margin-top: 40px;
+            width: 100%;
+            max-width: 300px;
+            padding: 18px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--logo-blue), #1976d2);
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease-out;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(25,118,210,0.2);
+        }
+
+        button:hover {
+            box-shadow: 0 6px 20px rgba(25,118,210,0.3);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(25,118,210,0.2);
+        }
+    </style>
 </head>
 
 <body data-paciente='{{ paciente_id | tojson }}'>
+    <header>
+        <div class="logo">VisionAI</div>
+        <nav>
+            <a href="/pacientes">Pacientes</a>
+        </nav>
+    </header>
 
-<h2>👁️ Medição Inteligente</h2>
+    <main>
+        
+        {% if paciente %}
+        <h3>Olá 🤓 <b>{{ paciente["nome"] }}</b>, inicie o atendimento.</h3>
+        {% endif %}
 
-{% if paciente %}
-<h3>Olá 🤓 <b>{{ paciente["nome"] }}</b></h3>
-{% endif %}
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="overlay"></canvas>
+        </div>
 
-<div class="video-container">
-  <video id="video" autoplay playsinline></video>
-  <canvas id="overlay"></canvas>
-</div>
+        <img id="output" style="display:none;">
+        <div id="status" class="status">Posicione seu rosto</div>
 
-<img id="output" style="display:none;">
-<div id="status" class="status">Posicione seu rosto</div>
+        <div class="info">
+            DP: <span id="dp"><b>0</b></span> mm |
+            DNP E: <span id="dnp_e"><b>0</b></span> |
+            DNP D: <span id="dnp_d"><b>0</b></span> |
+            Score: <span id="score"><b>0</b></span>%
+        </div>
 
-<div class="info">
-DP: <span id="dp">0</span> mm |
-DNP E: <span id="dnp_e">0</span> |
-DNP D: <span id="dnp_d">0</span> |
-Score: <span id="score">0</span>%
-</div>
+        <button onclick="finalizar()">Finalizar</button>
+    </main>
 
-<button onclick="finalizar()">Finalizar</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
-<script>
-// ==============================
-let paciente_id = JSON.parse(document.body.dataset.paciente);
+    <script>
+    // =========================
+    let paciente_id = JSON.parse(document.body.dataset.paciente);
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
 
-const video = document.getElementById("video");
-const canvas = document.getElementById("overlay");
-const ctx = canvas.getContext("2d");
+    const dpEl = document.getElementById("dp");
+    const dnp_eEl = document.getElementById("dnp_e");
+    const dnp_dEl = document.getElementById("dnp_d");
+    const scoreEl = document.getElementById("score");
+    const statusEl = document.getElementById("status");
 
-const dpEl = document.getElementById("dp");
-const dnp_eEl = document.getElementById("dnp_e");
-const dnp_dEl = document.getElementById("dnp_d");
-const scoreEl = document.getElementById("score");
-const statusEl = document.getElementById("status");
+    let dp_history = [];
+    let stableFrames = 0;
+    let FOTO_TIRADA = false;
+    let PROCESSANDO = true;
 
-let dp_history = [];
-let stableFrames = 0;
-let FOTO_TIRADA = false;
-let PROCESSANDO = true;
+    navigator.mediaDevices.getUserMedia({ video:true })
+    .then(stream => video.srcObject = stream)
+    .catch(()=> statusEl.innerText = "Erro ao acessar câmera");
 
-// ==============================
-// função para checar se ponto está dentro da elipse
-function dentroElipse(x, y, cx, cy, w, h){
-  let dx = x - cx;
-  let dy = y - cy;
-  return ((dx*dx)/(w/2*w/2) + (dy*dy)/(h/2*h/2)) <= 1;
-}
+    const faceMesh = new FaceMesh({ locateFile: (file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+    faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true });
 
-// ==============================
-navigator.mediaDevices.getUserMedia({ video:true })
-.then(stream => video.srcObject = stream)
-.catch(()=> statusEl.innerText = "Erro ao acessar câmera");
+    const L = 468;
+    const R = 473;
+    let smooth = { lx:null, rx:null, ly:null, ry:null };
 
-// ==============================
-const faceMesh = new FaceMesh({
-  locateFile: (file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-});
+    function atualizarCanvasSize(){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+    }
+    video.addEventListener('loadedmetadata', atualizarCanvasSize);
 
-faceMesh.setOptions({
-  maxNumFaces:1,
-  refineLandmarks:true
-});
+    function dentroElipse(x, y, cx, cy, w, h){
+        let dx = x - cx;
+        let dy = y - cy;
+        return ((dx*dx)/(w/2*w/2) + (dy*dy)/(h/2*h/2)) <= 1;
+    }
 
-const L = 468;
-const R = 473;
-let smooth = { lx:null, rx:null, ly:null, ry:null };
+    faceMesh.onResults(results=>{
+        if(!PROCESSANDO) return;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
 
-// ==============================
-function atualizarCanvasSize(){
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-}
-video.addEventListener('loadedmetadata', atualizarCanvasSize);
+        // elipse guia
+        ctx.strokeStyle = "rgba(0,172,193,0.3)";
+        ctx.lineWidth = 2;
+        const guia_cx = canvas.width/2;
+        const guia_cy = canvas.height/2;
+        const guia_w = canvas.width * 0.4;
+        const guia_h = canvas.height * 0.73;
+        ctx.beginPath();
+        ctx.ellipse(guia_cx, guia_cy, guia_w/2, guia_h/2, 0, 0, 2*Math.PI);
+        ctx.stroke();
 
-// ==============================
-faceMesh.onResults(results=>{
+        if(!results.multiFaceLandmarks.length){
+            statusEl.innerText = "Nenhum rosto detectado";
+            stableFrames = 0;
+            return;
+        }
 
-  if(!PROCESSANDO) return;
+        const lm = results.multiFaceLandmarks[0];
+        let lx = lm[L].x * canvas.width;
+        let rx = lm[R].x * canvas.width;
+        let ly = lm[L].y * canvas.height;
+        let ry = lm[R].y * canvas.height;
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(smooth.lx === null) smooth = { lx, rx, ly, ry };
+        smooth.lx = smooth.lx*0.7 + lx*0.3;
+        smooth.rx = smooth.rx*0.7 + rx*0.3;
+        smooth.ly = smooth.ly*0.7 + ly*0.3;
+        smooth.ry = smooth.ry*0.7 + ry*0.3;
 
-  // ==============================
-  // GUIA DO ROSTO (elipse)
-  ctx.strokeStyle = "rgba(0,0,255,0.5)";
-  ctx.lineWidth = 2;
-  const guia_cx = canvas.width/2;
-  const guia_cy = canvas.height/2;
-  const guia_w = canvas.width * 0.4;   // proporcional à tela
-  const guia_h = canvas.height * 0.73;
-  ctx.beginPath();
-  ctx.ellipse(guia_cx, guia_cy, guia_w/2, guia_h/2, 0, 0, 2*Math.PI);
-  ctx.stroke();
+        const dentro = dentroElipse(smooth.lx, smooth.ly, guia_cx, guia_cy, guia_w, guia_h) &&
+                        dentroElipse(smooth.rx, smooth.ry, guia_cx, guia_cy, guia_w, guia_h);
+        if(!dentro){ statusEl.innerText = "Posicione o rosto dentro do círculo"; stableFrames=0; return; }
 
-  if(!results.multiFaceLandmarks.length){
-    statusEl.innerText = "Nenhum rosto detectado";
-    stableFrames = 0;
-    return;
-  }
+        const dist = Math.hypot(smooth.rx - smooth.lx, smooth.ly - smooth.ry);
+        const faceLeft = lm[234].x * canvas.width;
+        const faceRight = lm[454].x * canvas.width;
+        const faceWidth = Math.abs(faceRight - faceLeft);
+        const escala = 140 / Math.max(faceWidth,1);
 
-  const lm = results.multiFaceLandmarks[0];
+        let dp = dist * escala;
+        let cx = (smooth.lx + smooth.rx)/2;
+        let cy = (smooth.ly + smooth.ry)/2;
+        const nx = lm[1].x * canvas.width;
+        const ny = lm[1].y * canvas.height;
+        cy += (ny - cy)*0.2;
 
-  let lx = lm[L].x * canvas.width;
-  let rx = lm[R].x * canvas.width;
-  let ly = lm[L].y * canvas.height;
-  let ry = lm[R].y * canvas.height;
+        const dnp_e = Math.abs(smooth.lx - cx) * escala;
+        const dnp_d = Math.abs(smooth.rx - cx) * escala;
 
-  // suavização
-  if(smooth.lx === null){
-    smooth = { lx, rx, ly, ry };
-  }
-  smooth.lx = smooth.lx*0.7 + lx*0.3;
-  smooth.rx = smooth.rx*0.7 + rx*0.3;
-  smooth.ly = smooth.ly*0.7 + ly*0.3;
-  smooth.ry = smooth.ry*0.7 + ry*0.3;
+        dp_history.push(dp);
+        if(dp_history.length>10) dp_history.shift();
+        dp = dp_history.reduce((a,b)=>a+b,0)/dp_history.length;
+        const variacao = Math.max(...dp_history)-Math.min(...dp_history);
 
-  // verifica se olhos estão dentro da elipse
-  const dentro = dentroElipse(smooth.lx, smooth.ly, guia_cx, guia_cy, guia_w, guia_h) &&
-                  dentroElipse(smooth.rx, smooth.ry, guia_cx, guia_cy, guia_w, guia_h);
+        let score = 100 - Math.abs(dp-64)*2;
+        score = Math.max(0, Math.min(100, score));
 
-  if(!dentro){
-    statusEl.innerText = "Posicione o rosto dentro do círculo";
-    stableFrames = 0;
-    return;
-  }
+        let status = "";
+        if(dp<55) status="Aproxime o rosto";
+        else if(dp>75) status="Afaste o rosto";
+        else if(score<70) status="Centralize melhor";
+        else if(score<90) status="Quase lá...";
+        else status="Perfeito! Não se mova";
 
-  // distância entre olhos
-  const dist = Math.hypot(smooth.rx - smooth.lx, smooth.ry - smooth.ly);
+        if(score>=98 && variacao<2){ stableFrames++; status="Capturando... "+stableFrames; }
+        else stableFrames=0;
 
-  // escala real
-  const faceLeft = lm[234].x * canvas.width;
-  const faceRight = lm[454].x * canvas.width;
-  const faceWidth = Math.abs(faceRight - faceLeft);
-  const escala = 140 / Math.max(faceWidth,1);
+        if(stableFrames>=15 && !FOTO_TIRADA){ FOTO_TIRADA=true; PROCESSANDO=false; capturarFoto(); }
 
-  let dp = dist * escala;
-  let cx = (smooth.lx + smooth.rx)/2;
-  let cy = (smooth.ly + smooth.ry)/2;
-  const nx = lm[1].x * canvas.width;
-  const ny = lm[1].y * canvas.height;
-  cy += (ny - cy)*0.2;
+        statusEl.innerText = status;
 
-  const dnp_e = Math.abs(smooth.lx - cx) * escala;
-  const dnp_d = Math.abs(smooth.rx - cx) * escala;
+        ctx.fillStyle="green";
+        ctx.beginPath(); ctx.arc(smooth.lx,smooth.ly,4,0,2*Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(smooth.rx,smooth.ry,4,0,2*Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(nx,ny,4,0,2*Math.PI); ctx.fill();
 
-  // histórico dp
-  dp_history.push(dp);
-  if(dp_history.length > 10) dp_history.shift();
-  dp = dp_history.reduce((a,b)=>a+b,0) / dp_history.length;
+        ctx.strokeStyle="red"; ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.moveTo(smooth.lx,smooth.ly);
+        ctx.lineTo(smooth.rx,smooth.ry);
+        ctx.stroke();
 
-  const variacao = Math.max(...dp_history) - Math.min(...dp_history);
+        ctx.strokeStyle = score>98?"green":"red";
+        ctx.lineWidth=2;
+        ctx.strokeRect(canvas.width*0.15, canvas.height*0.13, canvas.width*0.7, canvas.height*0.73);
 
-  // score
-  const dp_target = 64;
-  let score = 100 - Math.abs(dp - dp_target)*2;
-  score = Math.max(0, Math.min(100, score));
+        dpEl.innerText=dp.toFixed(1);
+        dnp_eEl.innerText=dnp_e.toFixed(1);
+        dnp_dEl.innerText=dnp_d.toFixed(1);
+        scoreEl.innerText=score.toFixed(0);
+    });
 
-  // status inteligente
-  let status = "";
-  if(dp < 55) status = "Aproxime o rosto";
-  else if(dp > 75) status = "Afaste o rosto";
-  else if(score < 70) status = "Centralize melhor";
-  else if(score < 90) status = "Quase lá...";
-  else status = "Perfeito! Não se mova";
+    new Camera(video,{
+        onFrame: async ()=> await faceMesh.send({image:video}),
+        width:600,
+        height:450
+    }).start();
 
-  // captura automática quando score >= 98
-  if(score >= 98 && variacao < 2){
-    stableFrames++;
-    status = "Capturando... " + stableFrames;
-  } else {
-    stableFrames = 0;
-  }
+    function capturarFoto(){
+        let tempCanvas = document.createElement("canvas");
+        tempCanvas.width = video.videoWidth;
+        tempCanvas.height = video.videoHeight;
+        let tctx = tempCanvas.getContext("2d");
+        tctx.drawImage(video,0,0);
+        let img = tempCanvas.toDataURL("image/jpeg");
 
-  if(stableFrames >= 15 && !FOTO_TIRADA){
-    FOTO_TIRADA = true;
-    PROCESSANDO = false;
-    capturarFoto();
-  }
+        let foto = document.getElementById("foto");
+        foto.src = img;
+        foto.style.display="block";
+        statusEl.innerText="Foto capturada ✅";
 
-  statusEl.innerText = status;
+        fetch("/salvar_foto",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({ paciente_id, imagem: img })
+        })
+        .then(res=>res.json())
+        .then(json=>{
+            const output = document.getElementById("output");
+            output.src="data:image/jpeg;base64,"+json.image;
+            output.style.display="block";
+        });
+    }
 
-  // overlay dos olhos
-  ctx.fillStyle = "green";
-  ctx.beginPath(); ctx.arc(smooth.lx, smooth.ly, 4,0,2*Math.PI); ctx.fill();
-  ctx.beginPath(); ctx.arc(smooth.rx, smooth.ry, 4,0,2*Math.PI); ctx.fill();
-  ctx.beginPath(); ctx.arc(nx, ny, 4,0,2*Math.PI); ctx.fill();
-
-  // linha entre olhos
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(smooth.lx, smooth.ly);
-  ctx.lineTo(smooth.rx, smooth.ry);
-  ctx.stroke();
-
-  // overlay quadro central
-  ctx.strokeStyle = score > 98 ? "green" : "red";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(canvas.width*0.15, canvas.height*0.13, canvas.width*0.7, canvas.height*0.73);
-
-  // UI
-  dpEl.innerText = dp.toFixed(1);
-  dnp_eEl.innerText = dnp_e.toFixed(1);
-  dnp_dEl.innerText = dnp_d.toFixed(1);
-  scoreEl.innerText = score.toFixed(0);
-
-});
-
-// ==============================
-new Camera(video,{
-  onFrame: async ()=> await faceMesh.send({image:video}),
-  width:600,
-  height:450
-}).start();
-
-// ==============================
-function capturarFoto(){
-  let tempCanvas = document.createElement("canvas");
-  tempCanvas.width = video.videoWidth;
-  tempCanvas.height = video.videoHeight;
-  let tctx = tempCanvas.getContext("2d");
-  tctx.drawImage(video,0,0);
-  let img = tempCanvas.toDataURL("image/jpeg");
-
-  let foto = document.getElementById("foto");
-  foto.src = img;
-  foto.style.display = "block";
-  statusEl.innerText = "Foto capturada ✅";
-
-  fetch("/salvar_foto",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ paciente_id, imagem: img })
-  })
-  .then(res => res.json())
-  .then(json => {
-      const output = document.getElementById("output");
-      output.src = "data:image/jpeg;base64," + json.image;
-      output.style.display = "block";
-  });
-}
-
-function finalizar(){
-  if(!FOTO_TIRADA){
-    alert("Aguarde a captura da foto!");
-    return;
-  }
-  fetch("/salvar_medicao",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      paciente_id,
-      dp: parseFloat(dpEl.innerText),
-      dnp_e: parseFloat(dnp_eEl.innerText),
-      dnp_d: parseFloat(dnp_dEl.innerText),
-      score: parseFloat(scoreEl.innerText)
-    })
-  })
-  .then(()=> window.location.href="/prontuario/"+paciente_id);
-}
-</script>
-
+    async function finalizar(){
+        if(!FOTO_TIRADA){ alert("Aguarde a captura da foto!"); return; }
+        fetch("/salvar_medicao",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+                paciente_id,
+                dp: parseFloat(dpEl.innerText),
+                dnp_e: parseFloat(dnp_eEl.innerText),
+                dnp_d: parseFloat(dnp_dEl.innerText),
+                score: parseFloat(scoreEl.innerText)
+            })
+        }).then(()=> window.location.href="/prontuario/"+paciente_id);
+    }
+    </script>
 </body>
 </html>
