@@ -216,7 +216,7 @@ button {
             <canvas id="overlay"></canvas>
         </div>
 
-        <img id="output" style="display:none;">
+        <img id="foto" style="display:none;">
         <div id="status" class="status">Posicione seu rosto</div>
 
         <div class="info">
@@ -251,7 +251,11 @@ button {
     let FOTO_TIRADA = false;
     let PROCESSANDO = true;
 
-    navigator.mediaDevices.getUserMedia({ video:true })
+    navigator.mediaDevices.getUserMedia({
+    video: {
+        facingMode: "user"
+    }
+    })
     .then(stream => video.srcObject = stream)
     .catch(()=> statusEl.innerText = "Erro ao acessar câmera");
 
@@ -377,29 +381,25 @@ button {
     }).start();
 
     function capturarFoto(){
-        let tempCanvas = document.createElement("canvas");
-        tempCanvas.width = video.videoWidth;
-        tempCanvas.height = video.videoHeight;
-        let tctx = tempCanvas.getContext("2d");
-        tctx.drawImage(video,0,0);
-        let img = tempCanvas.toDataURL("image/jpeg");
+    let tempCanvas = document.createElement("canvas");
+    tempCanvas.width = video.videoWidth;
+    tempCanvas.height = video.videoHeight;
 
-        let foto = document.getElementById("foto");
-        foto.src = img;
-        foto.style.display="block";
-        statusEl.innerText="Foto capturada ✅";
+    let tctx = tempCanvas.getContext("2d");
+    tctx.drawImage(video,0,0);
 
-        fetch("/salvar_foto",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({ paciente_id, imagem: img })
-        })
-        .then(res=>res.json())
-        .then(json=>{
-            const output = document.getElementById("output");
-            output.src="data:image/jpeg;base64,"+json.image;
-            output.style.display="block";
-        });
+    let img = tempCanvas.toDataURL("image/jpeg");
+
+    document.getElementById("foto").src = img;
+    document.getElementById("foto").style.display="block";
+
+    statusEl.innerText="Foto capturada ✅";
+
+    fetch("/salvar_foto",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ paciente_id, imagem: img })
+    });
     }
 
     async function finalizar(){
