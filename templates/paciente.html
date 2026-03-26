@@ -1,196 +1,262 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionAI • Cadastro do Paciente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visionai.css') }}">
+    
+    <style>
+        /* CONFIGURAÇÕES GERAIS - TEMA CLARO PAPEL */
+        :root {
+            --bg-paper: #f4f1ea;
+            --text-main: #212121;
+            --text-sub: #616161;
+            --card-bg: #ffffff;
+            --frosty-bg: #fafafa;
+            --logo-blue: #00acc1;
+            --logo-green: #1b5e20;
+            --transition: 0.3s ease;
+        }
 
-<meta charset="UTF-8">
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-paper);
+            /* Textura sutil de papel */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23ebe8df' fill-opacity='0.4' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-<title>VisionAI • Cadastro do Paciente</title>
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 80px;
+            background: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            backdrop-filter: blur(5px);
+        }
 
-<link rel="stylesheet" href="{{ url_for('static', filename='visionai.css') }}">
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--logo-blue);
+        }
 
-<style>
+        nav { display: flex; gap: 5px; }
+        nav a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+        nav a:hover {
+            background: rgba(0, 172, 193, 0.05);
+            color: var(--logo-blue);
+        }
+        nav a.active {
+            background: linear-gradient(135deg, var(--logo-blue), #1976d2);
+            color: white;
+        }
 
-body{
-margin:0;
-font-family:Segoe UI;
-background:radial-gradient(circle at top,#0f172a,#020617);
-color:white;
-}
+        /* CONTAINER PRINCIPAL E DASHBOARD */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
 
-/* HEADER */
+        .dashboard {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
 
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:20px 60px;
-}
+        .card {
+            background: var(--card-bg);
+            padding: 30px 25px;
+            border-radius: 20px;
+            width: 200px;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
 
-.logo{
-font-size:24px;
-font-weight:700;
-}
+        .card h3 {
+            margin: 0;
+            font-size: 38px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--logo-blue), var(--logo-green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-nav a{
-margin-left:20px;
-text-decoration:none;
-color:white;
-font-weight:500;
-padding:8px 14px;
-border-radius:8px;
-transition:0.3s;
-}
+        .card p {
+            margin-top: 8px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
 
-nav a:hover{
-background:#22c55e;
-color:black;
-}
+        /* FORMULÁRIO - CORREÇÃO DA SOBREPOSIÇÃO AQUI */
+        .container {
+            width: 100%;
+            max-width: 460px;
+            background: var(--card-bg);
+            padding: 50px;
+            border-radius: 28px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
 
-/* DASHBOARD */
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: var(--text-main);
+        }
 
-.dashboard{
-display:flex;
-justify-content:center;
-gap:30px;
-margin-top:40px;
-}
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Espaço uniforme entre os grupos de input */
+        }
 
-.card{
-background:rgba(255,255,255,0.05);
-padding:25px;
-border-radius:15px;
-width:180px;
-text-align:center;
-}
+        /* Grupo de input para garantir o layout correto */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
 
-.card h3{
-margin:0;
-font-size:28px;
-color:#22c55e;
-}
+        /* Label corrigida para não sobrepor */
+        label {
+            display: block;
+            margin-bottom: 8px; /* Espaço entre o nome e a caixa */
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-.card p{
-margin-top:5px;
-color:#94a3b8;
-}
+        /* Input corrigido */
+        input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: var(--frosty-bg);
+            color: var(--text-main);
+            font-size: 16px;
+            box-sizing: border-box; /* Garante que o padding não aumente o tamanho */
+            transition: var(--transition);
+        }
 
-/* FORM */
+        input:focus {
+            outline: none;
+            border-color: var(--logo-blue);
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 172, 193, 0.1);
+        }
 
-.container{
-width:420px;
-margin:auto;
-margin-top:60px;
-padding:40px;
-border-radius:20px;
-background:rgba(255,255,255,0.05);
-}
+        /* Input de data específico */
+        input[type="date"] {
+            appearance: none; /* Remove estilos padrão */
+            -webkit-appearance: none;
+        }
 
-label{
-display:block;
-margin-top:15px;
-color:#94a3b8;
-}
+        /* BOTÃO SALVAR */
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--logo-blue), #1976d2);
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(25, 118, 210, 0.2);
+        }
 
-input{
-width:100%;
-padding:14px;
-margin-top:5px;
-border-radius:10px;
-border:none;
-background:rgba(255,255,255,0.08);
-color:white;
-font-size:16px;
-}
+        button:hover {
+            box-shadow: 0 6px 15px rgba(25, 118, 210, 0.3);
+            transform: translateY(-2px);
+        }
 
-button{
-margin-top:30px;
-width:100%;
-padding:14px;
-border:none;
-border-radius:30px;
-background:linear-gradient(90deg,#06b6d4,#22c55e);
-color:white;
-font-size:16px;
-cursor:pointer;
-}
-
-</style>
-
+    </style>
 </head>
 
 <body>
 
-<header>
+    <header>
+        <div class="logo">VisionAI</div>
+        <nav>
+            <a href="/paciente" class="active">Cadastro</a>
+            <a href="/pacientes">Pacientes</a>
+        </nav>
+    </header>
 
-<div class="logo">VisionAI</div>
+    <main>
+        <div class="dashboard">
+            <div class="card">
+                <h3>{{ total_pacientes }}</h3>
+                <p>Pacientes</p>
+            </div>
+            <div class="card">
+                <h3>{{ total_receitas }}</h3>
+                <p>Receitas</p>
+            </div>
+            <div class="card">
+                <h3>{{ total_armacoes }}</h3>
+                <p>Armações</p>
+            </div>
+        </div>
 
-<nav>
+        <div class="container">
+            <h2>Cadastro do Paciente</h2>
 
-<a href="/paciente">Cadastro</a>
+            <form action="/salvar_paciente" method="POST">
+                
+                <div class="input-group">
+                    <label>Nome Completo</label>
+                    <input type="text" name="nome" placeholder="Ex: João Silva" required>
+                </div>
 
-<a href="/pacientes">Pacientes</a>
+                <div class="input-group">
+                    <label>Idade</label>
+                    <input type="number" name="idade" placeholder="Ex: 35" min="0" required>
+                </div>
 
-</nav>
+                <div class="input-group">
+                    <label>Telefone / WhatsApp</label>
+                    <input type="tel" name="telefone" placeholder="(11) 99999-9999" required>
+                </div>
 
-</header>
+                <div class="input-group">
+                    <label>Data do Exame</label>
+                    <input type="date" name="data_exame" required>
+                </div>
 
-
-<!-- DASHBOARD -->
-
-<div class="dashboard">
-
-<div class="card">
-<h3>{{ total_pacientes }}</h3>
-<p>Pacientes</p>
-</div>
-
-<div class="card">
-<h3>{{ total_receitas }}</h3>
-<p>Receitas</p>
-</div>
-
-<div class="card">
-<h3>{{ total_armacoes }}</h3>
-<p>Armações</p>
-</div>
-
-</div>
-
-
-<!-- FORMULARIO -->
-
-<div class="container">
-
-<h2>Cadastro do Paciente</h2>
-
-<form action="/salvar_paciente" method="POST">
-
-<label>Nome</label>
-<input type="text" name="nome" required>
-
-<label>Idade</label>
-<input type="number" name="idade" required>
-
-<label>Telefone</label>
-<input 
-type="tel"
-name="telefone"
-placeholder="(11) 99999-9999"
-required
->
-
-<label>Data do exame</label>
-<input type="date" name="data_exame" required>
-
-<button type="submit">
-Salvar e continuar
-</button>
-
-</form>
-
-</div>
+                <button type="submit">
+                    Salvar e Continuar
+                </button>
+            </form>
+        </div>
+    </main>
 
 </body>
-
 </html>
