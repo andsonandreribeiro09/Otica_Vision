@@ -196,6 +196,18 @@ def receita():
     return render_template("receita.html", paciente=paciente)
 
 
+@app.route("/api/armacoes")
+def listar_armacoes():
+    import os
+
+    pasta = os.path.join("static", "armacoes")
+    arquivos = os.listdir(pasta)
+
+    imagens = [f for f in arquivos if f.endswith(".png")]
+
+    return {"armacoes": imagens}
+
+
 @app.route("/armacao")
 def armacao():
     paciente_id = session.get("paciente_id")
